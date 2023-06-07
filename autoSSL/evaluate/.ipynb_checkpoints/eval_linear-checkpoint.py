@@ -39,7 +39,10 @@ def eval_linear(pipe_data, models, device='cuda', split=None, test=None):
     X_test, y_test = test_data.array[0], test_data.array[1]
 
     if isinstance(models, torch.nn.Module):
-        models = {'name': ['model_0'], 'model': [models], 'address': None}
+        if isinstance(models, list):
+            models = {'name': ['model_'+str(i) for i in range(0,len(models))], 'model': models, 'address': None}
+        else:
+            models = {'name': ['model_0'], 'model': [models], 'address': None}
 
     # Initialize the results list
     results = []
