@@ -1,6 +1,16 @@
 ## Project Description
-
 autoSSL is a versatile and accessible library for Self-Supervised Learning (SSL). This Python-based deep learning library provides you with utilities for data loading, model architectures, evaluation scripts, and numerous experiment notebooks. The design and organization of this project encourage flexible, scalable, and reusable workflows for your SSL tasks.
+
+
+## Install
+
+https://pypi.org/project/autoSLL-torch/1.0.0/
+!pip install autoSLL_torch
+
+## Tutorial
+
+- API: https://px39n.gitbook.io/autossl/getting-started/introduction
+- Most updated: https://github.com/px39n/AutoSSL/tree/main/Tutorial_for_library
 
 ## Code Structure
 ```
@@ -143,4 +153,7 @@ Please explore the project and refer to the individual experiment notebooks for 
 
 
 ## More
+
+python setup.py sdist bdist_wheel
+twine upload dist/*
  
