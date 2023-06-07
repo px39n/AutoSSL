@@ -6,4 +6,9 @@ __pycache__/
 lightning_logs/
 experiment/experiment_checkpoints
 *.ckpt
-Datasets
+Datasets/sentinel  
+Datasets/imagenet-mini  
+Datasets/coco2017 
+Datasets/clothing
+Datasets/clothing
+Datasets/cifar10
