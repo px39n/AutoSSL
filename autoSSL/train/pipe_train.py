@@ -5,11 +5,11 @@ import pytorch_lightning as pl
 from autoSSL.utils import ck_callback, join_dir,ContinuousCSVLogger
 
 class Trainer(pl.Trainer):
-    def __init__(self, config, model_mode, extra_epoch=0):
-        self.config = config
+    def __init__(self, config, model_mode,max_epochs=None, extra_epoch=0, **kwargs):
+        self.config = config.copy()
         self.model_mode = model_mode
         self.extra_epoch = extra_epoch
-
+ 
         # Define the path for the config and checkpoint
         self.config["log_dir"] = join_dir(config["checkpoint_dir"], config["experiment"], config["name"])
 
@@ -27,6 +27,7 @@ class Trainer(pl.Trainer):
             accelerator=self.config["device"],
             callbacks=[ck_callback(self.config["log_dir"])],
             logger=ContinuousCSVLogger(save_dir=self.config["log_dir"], name=self.config["name"]),
+            **kwargs 
         )
 
     def initialize_config(self):

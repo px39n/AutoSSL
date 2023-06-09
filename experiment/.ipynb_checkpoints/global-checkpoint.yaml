@@ -7,13 +7,13 @@ memory_bank_size: 4096
 seed: 1
 
 input_size: 64
-path_to_train_cifar10: "Datasets/cifar10/train/"
-path_to_test_cifar10: "Datasets/cifar10/test/"
-path_to_train_imagenet-mini: "Datasets/imagenet-mini/train/"
-path_to_test_imagenet-mini: "Datasets/imagenet-mini/val/"
-path_to_data_Alex_clothing: "Datasets/clothing"   # https://www.kaggle.com/datasets/apollo2506/eurosat-dataset
-path_to_data_sentinel: "Datasets/sentinel"   # https://www.kaggle.com/datasets/apollo2506/eurosat-dataset
-dataset_dir: "Datasets/cifar10/train/"
+path_to_train_cifar10: "../Datasets/cifar10/train/"
+path_to_test_cifar10: "../Datasets/cifar10/test/"
+path_to_train_imagenet-mini: "../Datasets/imagenet-mini/train/"
+path_to_test_imagenet-mini: "../Datasets/imagenet-mini/val/"
+path_to_data_Alex_clothing: "../Datasets/clothing"   # https://www.kaggle.com/datasets/apollo2506/eurosat-dataset
+path_to_data_sentinel: "../Datasets/sentinel"   # https://www.kaggle.com/datasets/apollo2506/eurosat-dataset
+dataset_dir: "../Datasets/cifar10/train/"
 
 view: 2
 samples: 0

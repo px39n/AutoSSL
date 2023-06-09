@@ -55,13 +55,17 @@ def eval_linear(pipe_data, models, device='cuda', split=None, test=None):
         X_test_embedding = [embed(x, embedding_model, device) for x in DataLoader(X_test, batch_size=128)]
         X_test_embedding = np.concatenate(X_test_embedding)
 
-        # Initialize the SGDClassifier and train it
-        clf = SGDClassifier()
-        clf.fit(X_train_embedding, y_train)
+        if X_test_embedding is None:
+            accuracy = 'model_collapse'
+        else:
+            # Initialize the SGDClassifier and train it
+            clf = SGDClassifier()
+            clf.fit(X_train_embedding, y_train)
 
-        # Predict labels for the test data and calculate accuracy
-        X_test_predicted = clf.predict(X_test_embedding)
-        accuracy = accuracy_score(y_test, X_test_predicted)
+            # Predict labels for the test data and calculate accuracy
+            X_test_predicted = clf.predict(X_test_embedding)
+            accuracy = accuracy_score(y_test, X_test_predicted)
+
         namee=models["name"][i]
         # Append the accuracy to the results
         results.append((namee, accuracy))
