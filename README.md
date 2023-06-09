@@ -5,7 +5,10 @@ autoSSL is a versatile and accessible library for Self-Supervised Learning (SSL)
 ## Install
 
 https://pypi.org/project/autoSLL-torch/1.0.0/
+
+```
 !pip install autoSLL_torch
+```
 
 ## Tutorial
 
