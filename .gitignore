@@ -1,8 +1,10 @@
 
 __pycache__/
 .venv/
+**.ipynb_checkpoints
 
 # ignore outputs
+build/
 dist/
 *egg-info/
 
@@ -14,5 +16,6 @@ Datasets/
 *.pth
 *.ckpt
 lightning_logs/
+**your_dir_save_log/
 experiment/experiment_checkpoints
 *.ckpt
