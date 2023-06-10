@@ -1,13 +1,13 @@
 
 __pycache__/
- 
+.venv/
+
 *.pth
 *.ckpt
 lightning_logs/
 experiment/experiment_checkpoints
 *.ckpt
-Datasets/sentinel  
-Datasets/imagenet-mini  
-Datasets/coco2017 
-Datasets/clothing
-Datasets/clothing
+
+Datasets/
+# dont ignore these Datasets 
+!Datasets/cifar10/
