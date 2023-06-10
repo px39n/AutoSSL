@@ -2,12 +2,17 @@
 __pycache__/
 .venv/
 
+# ignore outputs
+dist/
+*egg-info/
+
+# data
+Datasets/
+# dont ignore these datasets 
+!Datasets/cifar10/
+
 *.pth
 *.ckpt
 lightning_logs/
 experiment/experiment_checkpoints
 *.ckpt
-
-Datasets/
-# dont ignore these Datasets 
-!Datasets/cifar10/
