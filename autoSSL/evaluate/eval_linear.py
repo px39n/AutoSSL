@@ -12,28 +12,19 @@ import torch
 def embed(x, embedding_model, device):
     embedding_model.eval()
     embedding_model.to(device)
-    x = x.float().to(device)   # remove the unsqueeze operation
+    x = x.float().to(device)
     return embedding_model(x).detach().cpu().numpy()
 
-
 def eval_linear(pipe_data, models, device='cuda', split=None, test=None):
-    '''
-    Parameters:
-    pipe_data (PipeDataset): The whole data as a PipeDataset object
-    models (dict/torch.nn.Module): Model dict returned by `pipe_collate` or a single model to create embeddings
-    device (str): Device to perform computations on. Default is 'cuda' if available.
-    split (float, optional): The ratio of samples to include in the train split.
-    test (PipeDataset, optional): The test data as a PipeDataset object
-    '''
-
-    # Use split parameter to divide data into train and test if test is not provided
-    if split is not None and test is None:
+    if split is not None:
         train_data, test_data = pipe_data.split(split)
-    else:
+    elif test is None:
+        train_data = pipe_data
+        test_data = pipe_data
+    else:         
         train_data = pipe_data
         test_data = test
 
-    # Extract features and labels from train and test data
     print("Load the training and testing dataset")
     X_train, y_train = train_data.array[0], train_data.array[1]
     X_test, y_test = test_data.array[0], test_data.array[1]
@@ -43,12 +34,9 @@ def eval_linear(pipe_data, models, device='cuda', split=None, test=None):
     if isinstance(models, list):
         models = {'name': ['model_'+str(i) for i in range(0,len(models))], 'model': models, 'address': None}
    
-    # Initialize the results list
     results = []
 
-    # Iterate over models and calculate accuracy
     for i, embedding_model in enumerate(tqdm(models['model'])):
-        # Get the embeddings for train and test data
         X_train_embedding = [embed(x, embedding_model, device) for x in DataLoader(X_train, batch_size=128)]
         X_train_embedding = np.concatenate(X_train_embedding)
 
@@ -58,21 +46,32 @@ def eval_linear(pipe_data, models, device='cuda', split=None, test=None):
         if X_test_embedding is None:
             accuracy = 'model_collapse'
         else:
-            # Initialize the SGDClassifier and train it
             clf = SGDClassifier()
             clf.fit(X_train_embedding, y_train)
 
-            # Predict labels for the test data and calculate accuracy
-            X_test_predicted = clf.predict(X_test_embedding)
-            accuracy = accuracy_score(y_test, X_test_predicted)
+            # Get class probabilities for each sample
+            class_probs = clf.predict_proba(X_test_embedding)
+
+            # Get the top 1 and top 3 predictions
+            top1_preds = np.argmax(class_probs, axis=1)
+            top3_preds = np.argpartition(class_probs, -3, axis=1)[:,-3:]
+
+            # Calculate accuracy
+            top1_accuracy = accuracy_score(y_test, top1_preds)
+            top3_accuracy = np.mean([1 if y in top3 else 0 for y, top3 in zip(y_test, top3_preds)])
+
+            accuracy = {
+                "Top-1 Accuracy": top1_accuracy,
+                "Top-3 Accuracy": top3_accuracy
+            }
 
         namee=models["name"][i]
-        # Append the accuracy to the results
         results.append((namee, accuracy))
         
     if models['address'] is not None:
         df = pd.read_csv(models['address'])
-        df['linear_accuracy'] = [result[1] for result in results]
+        df['linear_top1_accuracy'] = [result[1]["Top-1 Accuracy"] for result in results]
+        df['linear_top3_accuracy'] = [result[1]["Top-3 Accuracy"] for result in results]
         df.to_csv(models['address'], index=False)
     
-    return results
+    return results  

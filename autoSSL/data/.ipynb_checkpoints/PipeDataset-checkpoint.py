@@ -23,7 +23,7 @@ class PipeDataset():
             shuffle = config["shuffle"]
             drop_last = config["drop_last"]
             num_workers = config["num_workers"]
- 
+        
         self.transform = augmentation
         
         # Load the data using LightlyDataset with the specified transform
@@ -102,6 +102,19 @@ class PipeDataset():
 
         return dataset1, dataset2
 
+    
+    def create_KNNtest(self):
+        # Initialize the DataLoader
+        return DataLoader(
+            self._dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            drop_last=False,
+            num_workers=self.num_workers
+        )
+
+    
+    
     def update(self, dataset):
         """
         Update the current PipeDataset with a new dataset.
@@ -132,7 +145,7 @@ class PipeDataset():
             from lightly.utils.debug import plot_augmented_images
             import lightly
             input_images=[LightlyDataset(input_dir=self.dir)[index][0] for index in indices]
-            collate_fn2 =lightly.data.collate.MultiViewCollateFunction([dict2transformer(self.transform.aug) for i in range(self.transform.nview)])   
+            collate_fn2 =lightly.data.collate.MultiViewCollateFunction([self.transform.aug for i in range(self.transform.nview)])   
             fig = plot_augmented_images(input_images, collate_fn2)
         else:
             rows = math.ceil(len(indices) / 3)

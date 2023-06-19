@@ -11,3 +11,5 @@ Datasets/imagenet-mini
 Datasets/coco2017 
 Datasets/clothing
 Datasets/clothing
+*.png
+*.zip

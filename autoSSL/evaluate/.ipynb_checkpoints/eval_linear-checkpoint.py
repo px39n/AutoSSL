@@ -27,9 +27,12 @@ def eval_linear(pipe_data, models, device='cuda', split=None, test=None):
     '''
 
     # Use split parameter to divide data into train and test if test is not provided
-    if split is not None and test is None:
+    if split is not None:
         train_data, test_data = pipe_data.split(split)
-    else:
+    elif test is None:
+        train_data = pipe_data
+        test_data = pipe_data
+    else:         
         train_data = pipe_data
         test_data = test
 

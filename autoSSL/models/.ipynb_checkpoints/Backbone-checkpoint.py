@@ -1,4 +1,8 @@
-
+import torch
+from torch import nn
+import torchvision.models as models
+import torchvision
+ 
 def pipe_backbone(backbone="resnet18"):
     if backbone == "resnet18":
         return nn.Sequential(*list(models.resnet18().children())[:-1]),512
@@ -34,6 +38,11 @@ def pipe_backbone(backbone="resnet18"):
                 hidden_dim=384,
                 mlp_dim=384 * 4
             ),1000
-    else:
+    
+    elif backbone == "res_18_cifar":
+        from lightly.models import ResNetGenerator 
+        resnet = ResNetGenerator("resnet-18")
+        return nn.Sequential(*list(resnet.children())[:-1], nn.AdaptiveAvgPool2d(1)),512
+    else: 
         raise ValueError("Invalid backbone")
         

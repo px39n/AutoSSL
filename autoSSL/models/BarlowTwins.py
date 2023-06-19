@@ -26,16 +26,19 @@ class BarlowTwins(pl.LightningModule):
         x = self.backbone(x).flatten(start_dim=1)
         if self.prjhead_dim:
             x = self.projection_head(x)
-        if stop_gradient:
+        if self.stop_gradient:
             x = x.detach()
         return x
 
     def training_step(self, batch, batch_idx):
         (x0, x1), _, _ = batch
         z0 = self.forward(x0)
-        z1 = self.forward(x1, self.stop_gradient)
-        loss = self.criterion(z0, z1)
-        self.log('train_loss', loss)
+        z1 = self.forward(x1)
+        if self.stop_gradient:
+            loss = 0.5 * (self.criterion(z0, p1) + self.criterion(z1, p0))
+        else:
+            loss = self.criterion(z0, p1)
+            self.log('train_loss', loss)
         return loss
 
     def configure_optimizers(self):

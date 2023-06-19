@@ -1,4 +1,6 @@
+from .dim2head import *
 from .embedding import *
 from .logging import *
-from .pipe_model import *
 from .dict2transformer import *
+from .join_dir import *
+from .knn import *
