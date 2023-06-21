@@ -21,7 +21,7 @@ from autoSSL.utils.knn import knn_predict
 from autoSSL.utils.dim2head import dim2head
 from torch.optim.lr_scheduler import LambdaLR
 from lightly.models.modules import heads
-
+import random
 
 class Toymodel(pl.LightningModule):
     def __init__(self, backbone="resnet18", 
@@ -116,6 +116,9 @@ class Toymodel(pl.LightningModule):
             self.log('representation_std', variance_loss(z0))
             self.log('correlation', covariance_loss(z0))
             
+            
+            self.log('view_variance', view_variance(torch.stack([z for z in [z0,z1]])))
+            
            
         else:
             views, _, _ = batch
@@ -154,13 +157,50 @@ class Toymodel(pl.LightningModule):
                 self.debug["stop"]=8
                 mean_embed=torch.mean(zs, dim=0)
                 for i in range(1,len(views)):
-                    loss += self.criterion(ps[i], mean_embed) / (len(views))  
+                    loss += self.criterion(ps[i], mean_embed) / (len(views))    
+                    
+            elif self.view_model=="std_view":     # fastsim #pair-pair #1_n # mean_n #1_fastsim
+                self.debug["stop"]=9
+                mean_embed=torch.mean(zs, dim=0)
+                for i in range(1,len(views)):
+                    loss += self.criterion(ps[i], mean_embed)** 2 / (len(views))  
+                loss=torch.sqrt(loss) 
+                        
+            elif self.view_model=="var_view":     # fastsim #pair-pair #1_n # mean_n #1_fastsim #
+                self.debug["stop"]=10
+                mean_embed=torch.mean(zs, dim=0)
+                for i in range(1,len(views)):
+                    loss += self.criterion(ps[i], mean_embed)** 2 / (len(views))            
+            elif self.view_model=="mean_n_sam":     # fastsim #pair-pair #1_n # mean_n #1_fastsim #
+                self.debug["stop"]=11
+                zs_new = []
+                limit = 4  # limit on the number of views to sample
+                n_views = len(views)
+                n_features = zs.shape[2]
+                n_batches = zs.shape[1]
+
+                # Create a random view sampling plan for each feature
+                view_sampling_plan = [random.sample(range(n_views), limit) if n_views > limit else list(range(n_views)) for _ in range(n_features)]
+
+                # Apply the sampling plan to each feature for each batch
+                for b in range(n_batches):
+                    zs_new_batch = []
+                    for f in range(n_features):
+                        zs_new_batch.append(torch.mean(zs[view_sampling_plan[f], b, f]))
+                    zs_new.append(torch.stack(zs_new_batch))
+                zs_new = torch.stack(zs_new)
+
+                mean_embed = torch.mean(zs_new, dim=0)
+                loss = 0
+                for i in range(1, len(views)):
+                    loss += self.criterion(ps[i], mean_embed) / len(views)
+                    
             else:
                 ValueError(f"Unknown model name: {self.view_model}")
             #self.log('representation_std', features[0].std())
             self.log('representation_std', variance_loss(zs[0]))
             self.log('correlation', covariance_loss(zs[0]))
-            
+            self.log('view_variance', view_variance(zs))
         self.log('train_loss', loss)
         
         return loss
@@ -185,7 +225,7 @@ class Toymodel(pl.LightningModule):
         )
             
         elif self.optimizer=="Adam":
-            optimizer = torch.optim.Adam(self.parameters(), lr=6e-2 )
+            optim = torch.optim.Adam(self.parameters(), lr=6e-2 )
         elif self.optimizer=="SGD":
             optim = torch.optim.SGD(
             self.parameters(),
@@ -336,6 +376,8 @@ def exclude_bias_and_norm(p):
     return p.ndim == 1
 
 
+from typing import List
+  
 def covariance_loss(x: Tensor) -> Tensor:
     """Returns VICReg covariance loss.
 
@@ -359,6 +401,7 @@ def covariance_loss(x: Tensor) -> Tensor:
                      
                      
 import torch.nn.functional as F
+ 
 def variance_loss(x: Tensor, eps: float = 0.0001) -> Tensor:
     """Returns VICReg variance loss.
 
@@ -373,3 +416,18 @@ def variance_loss(x: Tensor, eps: float = 0.0001) -> Tensor:
     loss = torch.mean(std)
     return loss
 
+ 
+ 
+def view_variance(zs: List[torch.Tensor]) -> Tensor:
+ 
+    average = torch.mean(zs, dim=0)
+    variance = 0
+    
+    for i in range(1, len(zs)):
+        average_flat = average.view(-1)
+        element_flat = zs[i].view(-1)
+        variance += torch.mean((average_flat - element_flat) ** 2) 
+    
+    loss = torch.sqrt(variance)   
+    
+    return loss 

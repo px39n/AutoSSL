@@ -1,4 +1,4 @@
-from lightly.loss import NegativeCosineSimilarity,BarlowTwinsLoss,VICRegLoss
+from lightly.loss import NegativeCosineSimilarity,BarlowTwinsLoss,VICRegLoss, NTXentLoss
 
 def get_loss(name=""):
     
@@ -10,7 +10,9 @@ def get_loss(name=""):
     
     elif name=="NegativeCosineSimilarity":
         return NegativeCosineSimilarity()
-    
+    elif name=="SimCLR":
+        return NTXentLoss()
+      
     else:
        raise ValueError(f"Unknown loss name: {name}")
 

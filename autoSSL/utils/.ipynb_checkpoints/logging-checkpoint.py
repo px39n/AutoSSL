@@ -20,7 +20,9 @@ class ContinuousCSVLogger(CSVLogger):
             elif metric == "kNN_accuracy":
                 filepath = os.path.join(self.save_dir, f"{self.name}_kNN_accuracy.csv")
             elif metric == "correlation":
-                filepath = os.path.join(self.save_dir, f"{self.name}_correlation.csv")          
+                filepath = os.path.join(self.save_dir, f"{self.name}_correlation.csv")   
+            elif metric == "view_variance":
+                filepath = os.path.join(self.save_dir, f"{self.name}_view_variance.csv")        
             else:
                 filepath = os.path.join(self.save_dir, f"{self.name}_others.csv")
 

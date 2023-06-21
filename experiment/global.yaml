@@ -32,7 +32,7 @@ backbone: "resnet18" # ["resnet18", "resnet18_pretrained", "resnet50", "resnet50
 stop_gradient: False
 prjhead_dim: [[512,2048, "BN","RELU"],[2048,None,None]]  #The first is for hidden, #the second is for output
 predhead_dim: []     #The first is for hidden, #the second is for output
-loss_func: "NegativeCosineSimilarity"    # ["VICRegLoss" , "BarlowTwinsLoss" , "NegativeCosineSimilarity"]
+loss_func: "NegativeCosineSimilarity"    # ["VICRegLoss" , "BarlowTwinsLoss" , "NegativeCosineSimilarity", "SimCLR"]
 view_model: "None"    # fastsim #pair-pair #1_n # mean_n #1_fastsim
 view: 2
 
