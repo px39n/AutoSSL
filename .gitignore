@@ -4,7 +4,6 @@ __pycache__/
 *.pth
 *.ckpt
 lightning_logs/
-experiment/experiment_checkpoints
 *.ckpt
 Datasets/sentinel  
 Datasets/imagenet-mini  

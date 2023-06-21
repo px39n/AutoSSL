@@ -1,0 +1,37 @@
+GPU Usage(Gbyte): 4.934481620788574
+backbone: resnet18
+batch_size: 512
+checkpoint_dir: experiment_checkpoints/
+dataset_dir: ../Datasets/cifar10/train/
+device: cuda
+drop_last: true
+experiment: lightly_baseline
+input_size: 32
+log_dir: experiment_checkpoints/lightly_baseline\BT_Baseline_SGD+COS+res_18_cifar
+loss_func: BarlowTwinsLoss
+max_epochs: 50
+memory_bank_size: 4096
+model: Toymodel
+name: BT_Baseline_SGD+COS+res_18_cifar
+num_workers: 4
+optimizer: SGD
+path_to_data_Alex_clothing: ../Datasets/clothing
+path_to_data_sentinel: ../Datasets/sentinel
+path_to_test_cifar10: ../Datasets/cifar10/test/
+path_to_test_imagenet-mini: ../Datasets/imagenet-mini/val/
+path_to_test_xBD: ../Datasets/xBD/test/
+path_to_train_cifar10: ../Datasets/cifar10/train/
+path_to_train_imagenet-mini: ../Datasets/imagenet-mini/train/
+path_to_train_xBD: ../Datasets/xBD/train/
+predhead_dim: []
+prjhead_dim:
+- 2048
+- 2048
+runing time(min): 34.677278812726335
+samples: 0
+schedule: cos
+seed: 1
+shuffle: true
+stop_gradient: false
+view: 2
+view_model: None

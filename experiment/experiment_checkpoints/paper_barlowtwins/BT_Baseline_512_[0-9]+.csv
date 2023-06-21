@@ -1,0 +1,2 @@
+dir_name,ckpt_path,config_path,log_path,linear_accuracy
+BT_Baseline_512_200,experiment_checkpoints/paper_barlowtwins\BT_Baseline_512_200\checkpoints-epoch=199-train_loss=218.03.ckpt,experiment_checkpoints/paper_barlowtwins\BT_Baseline_512_200\config.yaml,experiment_checkpoints/paper_barlowtwins\BT_Baseline_512_200\BT_Baseline_512_200.csv,0.49245075492450757
