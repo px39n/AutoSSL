@@ -1,0 +1,25 @@
+import torch
+def Cor_view_jk_10(x: torch.Tensor) -> torch.Tensor:  
+    
+    x = x.permute(1, 2, 0) 
+    res = 0
+    for i in range(len(x)):
+        view = x[i] 
+        dim = view.size(0)
+        # nondiag_mask has shape (dim, dim) with 1s on all non-diagonal entries.
+        nondiag_mask = ~torch.eye(dim, device=view.device, dtype=torch.bool)
+        # cov has shape (..., dim, dim)
+        cov= torch.corrcoef(view)
+        loss = cov[..., nondiag_mask].abs().mean() 
+        res += loss/len(x)
+    return res
+def std_batch(x: torch.Tensor) -> torch.Tensor:
+    """Calculate the standard deviation across the batch dimension and then average."""
+    return x.std(dim=1).mean()
+
+x = torch.randn(22, 999, 20)  # Original tensor with shape (view, batch, fea)
+#x = x.permute(1, 0, 2)  # Adjust dimensions to be (batch, view, fea)
+#Cor_view_jk_01
+x[:,0:2,:].size()
+Cor_view_jk_10(x[:,0:2,:])
+std_batch(x[:,:,:])

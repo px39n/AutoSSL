@@ -5,8 +5,51 @@ import pandas as pd
 import torch
 import yaml
 from autoSSL.models import pipe_model
+from autoSSL.models.Backbone import pipe_backbone
 
-def pipe_collate(address, reg):
+def pipe_loadckpt(ckpt):
+
+    checkpoint = torch.load(ckpt)
+    # Extract only backbone state_dict
+    state_dict_backbone = {k: v for k, v in checkpoint['state_dict'].items() if 'backbone' in k and 'momentum' not in k}
+    # Remove 'backbone.' prefix in state_dict keys
+    state_dict_backbone = {k.replace('backbone.', ''): v for k, v in state_dict_backbone.items()}
+    #state_dict_backbone.keys()
+    
+    
+    try:
+        model_temp=pipe_backbone("resnet18_5layer")[0]
+        model_temp.load_state_dict(state_dict_backbone)
+        model=model_temp
+        print("Successfully load resnet18_5layer")
+    except:
+        pass
+    
+    try:
+        model_temp=pipe_backbone("resnet18_5layer_split8")[0]
+        model_temp.load_state_dict(state_dict_backbone)
+        model=model_temp
+        print("Successfully load resnet18_5layer_split8")
+    except:
+        pass
+    
+    try:
+        model_temp=pipe_backbone("resnet18")[0]
+        model_temp.load_state_dict(state_dict_backbone)
+        model=model_temp
+        print("Successfully load resnet18")
+    except:
+        #raise ValueError("Cannot detect the current ckpt")
+        pass
+
+    try:
+        model.eval()
+        return model
+    except:
+         
+        raise ValueError("Cannot detect the current ckpt")
+        
+def pipe_collate(address, reg, autoDL=None):
     # Define the directory to search
     search_dir = address
     
@@ -34,7 +77,8 @@ def pipe_collate(address, reg):
         dir_names.append(dir_name)
 
         # Find the checkpoint file with maximum epoch
-        checkpoint_files = glob.glob(os.path.join(dir_path, "*.ckpt"))
+        checkpoint_files = glob.glob(os.path.join(dir_path, "**", "*.ckpt"), recursive=True)
+
         max_epoch = -1
         ckpt_path = None
         for file in checkpoint_files:
@@ -52,14 +96,23 @@ def pipe_collate(address, reg):
         log_paths.append(os.path.join(dir_path, dir_name+".csv"))
 
         # Load model and add to model_list
-        checkpoint = torch.load(ckpt_path)
- 
-        with open(config_path, 'r') as stream:
-            config = yaml.safe_load(stream)
-            
-        model = pipe_model(config=config) 
-        model.load_state_dict(checkpoint['state_dict'])
-        model.eval()
+        if autoDL:
+            print(ckpt_path)
+            model=pipe_loadckpt(ckpt_path)
+        else:
+            try:
+                checkpoint = torch.load(ckpt_path)
+            except:
+                print(dir_path)
+                print(ckpt_path)
+                raise("error")
+            with open(config_path, 'r') as stream:
+                config = yaml.safe_load(stream)
+
+            model = pipe_model(config=config) 
+            model.load_state_dict(checkpoint['state_dict'])
+            model.eval()
+            model=model.backbone
         model_list.append(model)
     
     # Create a pandas DataFrame

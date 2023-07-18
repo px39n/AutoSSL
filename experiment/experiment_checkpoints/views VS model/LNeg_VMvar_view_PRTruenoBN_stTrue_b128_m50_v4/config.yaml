@@ -1,4 +1,4 @@
-GPU Usage(Gbyte): 0.6040205955505371
+GPU Usage(Gbyte): 0.6236281394958496
 backbone: resnet18
 batch_size: 128
 checkpoint_dir: experiment_checkpoints/
@@ -41,7 +41,7 @@ prjhead_dim:
   - 2048
   - BN
   - null
-runing time(min): 1.4641818086306253
+runing time(min): 39.64684046904246
 samples: 0
 schedule: cos
 seed: 1

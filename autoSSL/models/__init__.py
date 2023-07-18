@@ -1,11 +1,5 @@
-from .MoCo import *
-from .BYOL import *
-from .SimCLR import *
-from .SimSiam import *
-from .VICReg import *
-from .BarlowTwins import *
+
 from .Toymodel import *
-from .FastSiam import *
 from .get_loss import *
 from .Backbone import pipe_backbone
 from .pipe_model import *

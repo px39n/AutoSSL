@@ -25,6 +25,52 @@ processes might continue the benchmark if one of the nodes is killed.
 If you know how to fix this don't hesitate to create an issue or PR :)
 Code has been tested on a A6000 GPU with 48GBytes of memory.
 """
+
+
+
+logs_root_dir = os.path.join(os.getcwd(), "benchmark_logs")
+num_workers = 12
+memory_bank_size = 2**16
+# set max_epochs to 800 for long run (takes around 10h on a single V100)
+max_epochs = 200
+knn_k = 20
+knn_t = 0.1
+classes = 100
+input_size = 224
+# Set to True to enable Distributed Data Parallel training.
+distributed = False
+
+# Set to True to enable Synchronized Batch Norm (requires distributed=True).
+# If enabled the batch norm is calculated over all gpus, otherwise the batch
+# norm is only calculated from samples on the same gpu.
+sync_batchnorm = False
+
+# Set to True to gather features from all gpus before calculating
+# the loss (requires distributed=True).
+# If enabled then the loss on every gpu is calculated with features from all
+# gpus, otherwise only features from the same gpu are used.
+gather_distributed = False
+
+# benchmark
+n_runs = 1  # optional, increase to create multiple runs and report mean + std
+batch_size = 256
+lr_factor = batch_size / 256  # scales the learning rate linearly with batch size
+
+# Number of devices and hardware to use for training.
+devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
+accelerator = "gpu" if torch.cuda.is_available() else "cpu"
+
+if distributed:
+    strategy = "ddp"
+    # reduce batch size for distributed training
+    batch_size = batch_size // devices
+else:
+    strategy = None  # Set to "auto" if using PyTorch Lightning >= 2.0
+    # limit to single device if not using distributed training
+    devices = min(devices, 1)
+
+    
+    
 import copy
 import os
 import time
@@ -59,49 +105,12 @@ from lightly.transforms import (
 from lightly.transforms.utils import IMAGENET_NORMALIZE
 from lightly.utils.benchmarking import BenchmarkModule
 
-logs_root_dir = os.path.join(os.getcwd(), "benchmark_logs")
 
-num_workers = 12
-memory_bank_size = 2**16
 
-# set max_epochs to 800 for long run (takes around 10h on a single V100)
-max_epochs = 200
-knn_k = 20
-knn_t = 0.1
-classes = 100
-input_size = 224
 
-# Set to True to enable Distributed Data Parallel training.
-distributed = False
 
-# Set to True to enable Synchronized Batch Norm (requires distributed=True).
-# If enabled the batch norm is calculated over all gpus, otherwise the batch
-# norm is only calculated from samples on the same gpu.
-sync_batchnorm = False
 
-# Set to True to gather features from all gpus before calculating
-# the loss (requires distributed=True).
-# If enabled then the loss on every gpu is calculated with features from all
-# gpus, otherwise only features from the same gpu are used.
-gather_distributed = False
 
-# benchmark
-n_runs = 1  # optional, increase to create multiple runs and report mean + std
-batch_size = 256
-lr_factor = batch_size / 256  # scales the learning rate linearly with batch size
-
-# Number of devices and hardware to use for training.
-devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
-accelerator = "gpu" if torch.cuda.is_available() else "cpu"
-
-if distributed:
-    strategy = "ddp"
-    # reduce batch size for distributed training
-    batch_size = batch_size // devices
-else:
-    strategy = None  # Set to "auto" if using PyTorch Lightning >= 2.0
-    # limit to single device if not using distributed training
-    devices = min(devices, 1)
 
 # The dataset structure should be like this:
 

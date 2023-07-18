@@ -12,31 +12,20 @@ class ContinuousCSVLogger(CSVLogger):
             raise ValueError("Step cannot be None. Please provide a step number.")
 
         for metric, value in metrics.items():
-            # check the metric name and append to the appropriate file
-            if metric == "representation_std":
-                filepath = os.path.join(self.save_dir, f"{self.name}_representation_std.csv")
-            elif metric == "train_loss":
-                filepath = os.path.join(self.save_dir, f"{self.name}_train_loss.csv")
-            elif metric == "kNN_accuracy":
-                filepath = os.path.join(self.save_dir, f"{self.name}_kNN_accuracy.csv")
-            elif metric == "correlation":
-                filepath = os.path.join(self.save_dir, f"{self.name}_correlation.csv")   
-            elif metric == "view_variance":
-                filepath = os.path.join(self.save_dir, f"{self.name}_view_variance.csv")        
-            else:
-                filepath = os.path.join(self.save_dir, f"{self.name}_others.csv")
+            # Create a file for each unique metric name
+            filepath = os.path.join(self.save_dir, f"{self.name}_{metric}.csv")
 
-            # check if the file exists. if not, write the header
+            # Check if the file exists. If not, write the header
             if not os.path.isfile(filepath):
                 with open(filepath, 'w', newline='') as f:
                     writer = csv.DictWriter(f, fieldnames=['step', metric])
                     writer.writeheader()
 
-            # write the metrics
+            # Write the metrics
             with open(filepath, 'a', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=['step', metric])
                 writer.writerow({'step': step, metric: value})
- 
+
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 

@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 from autoSSL.utils import ck_callback, join_dir,ContinuousCSVLogger
 import time
 import torch
+import re
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 class Trainer(pl.Trainer):
     def __init__(self, config, model_mode, extra_epoch=0,early_stop=False, **kwargs):
@@ -25,16 +26,21 @@ class Trainer(pl.Trainer):
             self.load_config()
             self.save_config()
             self.update_max_epoch()
+        elif self.model_mode == "fromOther":
+            self.save_config()
+ 
            
         if self.early_stop==True:
             callbacks=[EarlyStopping(monitor="kNN_accuracy", mode="max", patience=3)]
         else:
             callbacks=[]
+        profiler =pl.profilers.SimpleProfiler(dirpath=self.config["log_dir"],filename="save")    
         super().__init__(
             max_epochs=self.config["max_epochs"],
             accelerator=self.config["device"],
             callbacks=callbacks+[ck_callback(self.config["log_dir"])],
             logger=ContinuousCSVLogger(save_dir=self.config["log_dir"]),
+            profiler=profiler,
             **kwargs 
         )
 
@@ -59,7 +65,7 @@ class Trainer(pl.Trainer):
         return int(epoch_str)    
             
     def fit(self, model, dataloader, val_dataloaders=None, ckpt_path=None ):
-        if self.model_mode == "continue" and ckpt_path == "latest":
+        if (self.model_mode == "continue" and ckpt_path == "latest") or self.model_mode == "fromOther":
             # Get the most recent checkpoint file based on the epoch number in the filename
             checkpoint_files = glob.glob(join_dir(self.config["log_dir"], "*.ckpt"))
             max_epoch = -1
@@ -75,15 +81,62 @@ class Trainer(pl.Trainer):
             
         start = time.time()
         
-        super().fit(model, dataloader,val_dataloaders=model.dataloader_kNN, ckpt_path=ckpt_path)
+        super().fit(model, dataloader,val_dataloaders=model.p_test, ckpt_path=ckpt_path,)
         
         end = time.time()
-        
+
+        a, b,c,d,e = get_total_times(self.config["log_dir"]+'/fit-save.txt')
+        self.config["transform(min)"]=b/ 60
+        self.config["forward(min)"]=c/ 60
+        self.config["backward(min)"]=d/ 60
+        self.config["update(min)"]=e/ 60
         if "runing time(min)" in self.config:
-            self.config["runing time(min)"] += (end-start)
+            self.config["runing time(min)"] += (end-start)/ 60
         else:
             self.config["runing time(min)"] = (end-start)/ 60
         self.config["GPU Usage(Gbyte)"] = torch.cuda.max_memory_allocated() / (1024**3)    
         torch.cuda.reset_peak_memory_stats()
         self.save_config() 
-        
+
+
+ 
+def get_total_times(file_path):
+    # Open and read the file
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+    
+    # Initialize total times
+    total_time_all = None
+    total_time_train_dataloader = None
+
+    # Pattern for line
+    line_pattern = re.compile(r'\|\s+(.*?)\s+\|\s+(.*?)\s+\|\s+(.*?)\s+\|\s+(.*?)\s+\|\s+(.*?)\s+\|')
+
+    # Iterate over each line
+    for line in lines:
+        # Check if line starts with "| ", indicating it's a data line
+        if line.startswith("| "):
+            match = line_pattern.match(line)
+            if match:
+                action = match.group(1)
+                
+                # Make sure that total time is a number before attempting to convert
+                try:
+                    total_time = float(match.group(4))
+                except ValueError:
+                    continue  # skip header lines
+
+                if action == "Total":
+                    a = total_time
+                elif action == "[_TrainingEpochLoop].train_dataloader_next":
+                    b = total_time
+                elif action == "[Strategy]SingleDeviceStrategy.training_step":
+                    c = total_time
+                elif action == "[Strategy]SingleDeviceStrategy.backward":
+                    d = total_time
+                elif action == "[LightningModule]Toymodel.optimizer_step":
+                    e = total_time    
+                    
+                    
+                    
+    return a,b,c,d,e

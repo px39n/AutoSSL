@@ -39,10 +39,17 @@ def pipe_backbone(backbone="resnet18"):
                 mlp_dim=384 * 4
             ),1000
     
-    elif backbone == "res_18_cifar":
+    elif backbone == "resnet18_5layer":
         from lightly.models import ResNetGenerator 
         resnet = ResNetGenerator("resnet-18")
         return nn.Sequential(*list(resnet.children())[:-1], nn.AdaptiveAvgPool2d(1)),512
+    
+    elif backbone == "resnet18_5layer_split8":
+        from lightly.models import ResNetGenerator 
+        resnet = ResNetGenerator("resnet-18", num_splits=8)
+        return nn.Sequential(*list(resnet.children())[:-1], nn.AdaptiveAvgPool2d(1)),512
+            
+    
     else: 
         raise ValueError("Invalid backbone")
         

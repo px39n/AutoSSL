@@ -1,4 +1,4 @@
-from autoSSL.models import BarlowTwins, BYOL, MoCo, SimCLR, SimSiam, VICReg,Toymodel,FastSiam
+from autoSSL.models import  Toymodel 
 from autoSSL.data import PipeDataset
 # Function to get the model
 def pipe_model(name="InputYourModelName", config=None, **kwargs):
@@ -15,9 +15,16 @@ def pipe_model(name="InputYourModelName", config=None, **kwargs):
         batch= config["batch_size"]
         max_epochs=config["max_epochs"]
         name=config["model"]
-        
+        momentum =config["momentum"]
+        try:
+            learn_rate =config["learn_rate"]
+        except:
+            learn_rate =None
         samples=len(PipeDataset(config=config))
-        
+        return Toymodel(backbone=backbone, stop_gradient=stop_gradient, prjhead_dim=prjhead_dim, views=view, predhead_dim=predhead_dim,loss_func=loss_func, view_model=view_model,optimizer=optimizer,schedule=schedule , batch=batch,max_epochs=max_epochs,momentum=momentum, learn_rate=learn_rate,**kwargs)
+    
+    
+    
         if name == "MoCo":
             return MoCo(backbone=backbone, stop_gradient=stop_gradient, prjhead_dim=prjhead_dim[0])
         elif name == "BYOL":
@@ -33,11 +40,12 @@ def pipe_model(name="InputYourModelName", config=None, **kwargs):
         elif name=="FastSiam":
             return FastSiam(backbone=backbone, stop_gradient=stop_gradient, prjhead_dim=prjhead_dim[0])
         elif name=="Toymodel":
-            return Toymodel(backbone=backbone, stop_gradient=stop_gradient, prjhead_dim=prjhead_dim, views=view, predhead_dim=predhead_dim,loss_func=loss_func, view_model=view_model,optimizer=optimizer,schedule=schedule , batch=batch,max_epochs=max_epochs, **kwargs)
+            pass
         else:
             raise ValueError(f"Unknown model name: {name}")
 
     else:
+        return Toymodel(**kwargs)    
         # Use the original implementation if config is not provided
         if name == "MoCo":
             return MoCo(**kwargs)

@@ -1,14 +1,9 @@
 import pytorch_lightning as pl
 import torch
 from torch import nn
-from lightly.loss.vicreg_loss import VICRegLoss
-from lightly.models.modules import BarlowTwinsProjectionHead
-from lightly.models.modules import SimSiamPredictionHead 
 from autoSSL.models.Backbone import pipe_backbone
-from autoSSL.models.get_loss import get_loss
+from autoSSL.models.get_loss import get_loss, Magic_Cube
 from torch.utils.data import DataLoader
-from lightly.data.dataset import LightlyDataset
-from functools import partial    
 from typing import List, Optional
 import torch
 import torch.distributed as dist
@@ -20,9 +15,10 @@ from torch import Tensor
 from autoSSL.utils.knn import knn_predict
 from autoSSL.utils.dim2head import dim2head
 from torch.optim.lr_scheduler import LambdaLR
-from lightly.models.modules import heads
 import random
-
+from lightly.utils.scheduler import cosine_schedule
+from lightly.models.utils import deactivate_requires_grad, update_momentum
+import copy
 class Toymodel(pl.LightningModule):
     def __init__(self, backbone="resnet18", 
                  stop_gradient: bool=False,
@@ -39,7 +35,8 @@ class Toymodel(pl.LightningModule):
                  batch = 256,
                  max_epochs= 100,
                  samples=50000,
- 
+                 momentum: bool= False,
+                 learn_rate:float = None,
                 ):
         super().__init__()
         self.backbone, self.out_dim = pipe_backbone(backbone)
@@ -56,12 +53,25 @@ class Toymodel(pl.LightningModule):
         self.max_epochs = max_epochs
         self.samples=samples
         self.debug={"stop":None, "optim":None}
+        self.momentum=momentum
+        self.learn_rate=learn_rate
+        
+        if self.learn_rate:
+            print("Initialize with Customized Learning rate"+str(self.learn_rate))
+            
+        
         if self.prjhead_dim:
             self.projection_head = dim2head(self.prjhead_dim)
             
         if self.predhead_dim:
             self.prediction_head = dim2head(self.predhead_dim) 
         
+        if self.momentum:
+            self.backbone_momentum = copy.deepcopy(self.backbone)
+            deactivate_requires_grad(self.backbone_momentum)
+            if self.prjhead_dim:
+                self.projection_head_momentum = copy.deepcopy(self.projection_head)
+                deactivate_requires_grad(self.projection_head_momentum)
         if MonitoringbyKNN:
             self.dataloader_kNN = MonitoringbyKNN[0]
             self.num_classes = MonitoringbyKNN[1]
@@ -72,15 +82,35 @@ class Toymodel(pl.LightningModule):
             self._train_targets: Optional[Tensor] = None
             self._val_predicted_labels: List[Tensor] = []
             self._val_targets: List[Tensor] = []
+            self.p_test=MonitoringbyKNN[2]
         else:
             self.dataloader_kNN=None
+            self.p_test=None
             
     def forward(self, x):
-        x = self.backbone(x).flatten(start_dim=1)
+        a = self.backbone(x).flatten(start_dim=1)
+        
         if self.prjhead_dim:
-            x = self.projection_head(x)
+            f = self.projection_head(a)
+        else:
+            f=a
             
-        return x
+        if self.momentum: 
+            m=self.backbone_momentum(x).flatten(start_dim=1)
+            if self.prjhead_dim:
+                m=self.projection_head_momentum(m)
+            
+        if self.stop_gradient or self.predhead_dim or self.momentum:
+            p=f
+            if self.momentum:
+                f=m
+            if self.predhead_dim:
+                p = self.prediction_head(p)
+            if self.stop_gradient:
+                f = f.detach()
+            return f,p,a
+        else:
+            return f,f,a
 
     def forward_with_p(self, x):
         f = self.backbone(x).flatten(start_dim=1)
@@ -88,44 +118,49 @@ class Toymodel(pl.LightningModule):
         
         if self.prjhead_dim:
             f = self.projection_head(f)
-            p = self.projection_head(p)
-    
+            p = f
+
         if self.predhead_dim:
             p = self.prediction_head(p)
             
         if self.stop_gradient:
             f = f.detach()
+            
         return f, p
     
     def training_step(self, batch, batch_idx):
         
+        if self.momentum:
+                #momentum = cosine_schedule(self.current_epoch, 10, 0.996, 1)
+                update_momentum(self.backbone, self.backbone_momentum, m=0.99)
+                if self.prjhead_dim:
+                    update_momentum(self.projection_head, self.projection_head_momentum, m=0.99)   
+ 
+        views, _, _ = batch
         if self.view_model=="None":
-            
-            (x0, x1), _, _ = batch
-            if self.stop_gradient or self.predhead_dim:
-                z0, p0 = self.forward_with_p(x0)
-                z1, p1 = self.forward_with_p(x1)
+
+            (x0, x1)=views[0:2]
+             
+            z0, p0,_ = self.forward(x0)
+            z1, p1,_ = self.forward(x1)
+            if self.stop_gradient or self.predhead_dim or self.momentum :
                 loss = 0.5 * (self.criterion(z0, p1) + self.criterion(z1, p0))
                 self.debug["stop"]=1
-            else:
-                z0 = self.forward(x0)
-                z1 = self.forward(x1)
-                loss = self.criterion(z0, z1)
-                    # Compute the std of z0 and z1 and log it
-                self.debug["stop"]=2
-            self.log('representation_std', variance_loss(z0))
-            self.log('correlation', covariance_loss(z0))
-            
-            
-            self.log('view_variance', view_variance(torch.stack([z for z in [z0,z1]])))
-            
+
+            else: 
+                loss= self.criterion(z0, z1)
+                #loss = 0.5 * (self.criterion(z0, p1) + self.criterion(z1, p0))
+                self.debug["stop"]=2   
+            #self.log('representation_std', variance_loss(z0))
+            #self.log('correlation', covariance_loss(z0))
+            #self.log('view_variance', view_variance(torch.stack([z for z in [z0,z1]])))
+            features=[]
            
         else:
-            views, _, _ = batch
-            features = [self.forward_with_p(view) for view in views]   # features= [...,batch, feature for view_i]
-
-            zs = torch.stack([z for z, _ in features])     # zs= [...,embedding of batch, feature for view_i]
-            ps = torch.stack([p for _, p in features])     # zs= [...,projection of batch, feature for view_i]
+            
+            features = [self.forward(view) for view in views]   # features= [...,batch, feature for view_i]
+            zs = torch.stack([z for z, _,_ in features])     # zs= [...,embedding of batch, feature for view_i]
+            ps = torch.stack([p for _, p,_ in features])     # zs= [...,projection of batch, feature for view_i]
             
             loss = 0.0
             self.debug["stop"]=3
@@ -143,65 +178,150 @@ class Toymodel(pl.LightningModule):
                         if i!=j:
                             loss += self.criterion(ps[i], zs[j]) / (len(views)*len(views)/2)
                             
-            elif self.view_model=="1_n":     # fastsim #pair-pair #1_n # mean_n #1_fastsim
+            elif self.view_model=="1_n":     # fastsim #pair-pair #1_n # mean_n #1_mean
                 self.debug["stop"]=6
                 for i in range(1,len(views)):
                     loss += self.criterion(ps[0], zs[i]) / (len(views)-1)  
                     
-            elif self.view_model=="1_fastsim":     # fastsim #pair-pair #1_n # mean_n #1_fastsim
+            elif self.view_model=="1_mean":     # fastsim #pair-pair #1_n # mean_n #1_mean
                 self.debug["stop"]=7
-                mask = torch.arange(len(views), device=self.device) != 0
-                loss = self.criterion(ps[0], torch.mean(zs[mask], dim=0)) 
+                mean_embed=torch.mean(zs, dim=0)
+                loss = self.criterion(ps[0], mean_embed ) 
                 
-            elif self.view_model=="mean_n":     # fastsim #pair-pair #1_n # mean_n #1_fastsim
+            elif self.view_model=="mean_n":     # fastsim #pair-pair #1_n # mean_n #1_mean
                 self.debug["stop"]=8
                 mean_embed=torch.mean(zs, dim=0)
-                for i in range(1,len(views)):
+                for i in range(len(views)):
                     loss += self.criterion(ps[i], mean_embed) / (len(views))    
                     
-            elif self.view_model=="std_view":     # fastsim #pair-pair #1_n # mean_n #1_fastsim
+            elif self.view_model=="std_view":     # fastsim #pair-pair #1_n # mean_n #1_mean
+                variance=0
                 self.debug["stop"]=9
-                mean_embed=torch.mean(zs, dim=0)
-                for i in range(1,len(views)):
-                    loss += self.criterion(ps[i], mean_embed)** 2 / (len(views))  
-                loss=torch.sqrt(loss) 
+                mean=torch.mean(zs, dim=0)
+                #dev=0
+                #if self.loss_func =="NegativeCosineSimilarity":
+                #    dev=1
+                for i in range(len(views)):
+                    distance= self.criterion(ps[i], mean)**2
+                    variance += distance / (len(views))  
+                loss=torch.sqrt(variance) 
                         
-            elif self.view_model=="var_view":     # fastsim #pair-pair #1_n # mean_n #1_fastsim #
+            elif self.view_model=="var_view":     # fastsim #pair-pair #1_n # mean_n #1_mean #
+                variance=0
                 self.debug["stop"]=10
-                mean_embed=torch.mean(zs, dim=0)
-                for i in range(1,len(views)):
-                    loss += self.criterion(ps[i], mean_embed)** 2 / (len(views))            
-            elif self.view_model=="mean_n_sam":     # fastsim #pair-pair #1_n # mean_n #1_fastsim #
+                mean=torch.mean(zs, dim=0)
+                #dev=0
+                #if self.loss_func =="NegativeCosineSimilarity":
+                #    dev=1
+                for i in range(len(views)):
+                    distance=torch.exp(2* self.criterion(ps[i], mean))
+                    variance += distance / (len(views))  
+                loss=variance
+                
+            elif self.view_model=="1_mean":     # fastsim #pair-pair #1_n # mean_n #1_mean
                 self.debug["stop"]=11
-                zs_new = []
-                limit = 4  # limit on the number of views to sample
-                n_views = len(views)
-                n_features = zs.shape[2]
-                n_batches = zs.shape[1]
+                mean_embed=torch.mean(zs, dim=0)
+                loss = self.criterion(ps[0], mean_embed ) 
+                
+            elif self.view_model=="n_mean":     # fastsim #pair-pair #1_n # mean_n #1_mean 
+ 
+                self.debug["stop"]=12
+                mean_embed=torch.mean(ps, dim=0)
+                loss =self.criterion(zs[0],mean_embed)
+                
+            elif self.view_model=="n_mean_sym":     # fastsim #pair-pair #1_n # mean_n #1_mean  n_mean n_mean_sym
+                self.debug["stop"]=13
+                mean_embed=torch.mean(zs, dim=0)
+                mean_embed2=torch.mean(ps, dim=0)
+                loss = (self.criterion(ps[0], mean_embed)+self.criterion( mean_embed2,zs[0]))/2
+                
+                                
+                
+                
+                
+            elif self.view_model=="me_me":     # fastsim #pair-pair #1_n # mean_n #1_mean
+                self.debug["stop"]=12
 
-                # Create a random view sampling plan for each feature
-                view_sampling_plan = [random.sample(range(n_views), limit) if n_views > limit else list(range(n_views)) for _ in range(n_features)]
+                # Get the number of examples
+                num_examples = zs.size(0)
+                # If the number of examples is odd, round down to the nearest even number
+                if num_examples % 2 != 0:
+                    num_examples -= 1
+                    
+                # Compute the mean embedding for each half
+                mean_embed_first = torch.mean(ps[:num_examples // 2], dim=0)
+                mean_embed_last = torch.mean(zs[num_examples // 2: num_examples], dim=0)
 
-                # Apply the sampling plan to each feature for each batch
-                for b in range(n_batches):
-                    zs_new_batch = []
-                    for f in range(n_features):
-                        zs_new_batch.append(torch.mean(zs[view_sampling_plan[f], b, f]))
-                    zs_new.append(torch.stack(zs_new_batch))
-                zs_new = torch.stack(zs_new)
-
-                mean_embed = torch.mean(zs_new, dim=0)
-                loss = 0
-                for i in range(1, len(views)):
-                    loss += self.criterion(ps[i], mean_embed) / len(views)
+                # Compute the loss
+                loss = self.criterion(mean_embed_first, mean_embed_last)
+                
+                
+            elif self.view_model=="test":      
+                loss= self.criterion(ps) 
                     
             else:
                 ValueError(f"Unknown model name: {self.view_model}")
             #self.log('representation_std', features[0].std())
-            self.log('representation_std', variance_loss(zs[0]))
-            self.log('correlation', covariance_loss(zs[0]))
-            self.log('view_variance', view_variance(zs))
+            
+        import time
+        if not features:
+            features = [self.forward(view) for view in views]   # features= [...,batch, feature for view_i]
+            zs = torch.stack([z for z, _ , _ in features])     # zs= [...,embedding of batch, feature for view_i]
+        xs = torch.stack([x for _, _ , x in features])     # zs= [...,embedding of batch, feature for view_i]
+          
+        start = time.time()
+        
+
+        self.log('std_batch', std_batch(zs))
+        self.log('std_view', std_view(zs))
+        self.log('std_feature', std_feature(zs))
         self.log('train_loss', loss)
+
+        
+        self.log('Cor_view_jk_10', Cor_view_jk_10(zs[:,0:2,:]))
+        self.log('Cor_view_jk_01', Cor_view_jk_01(zs)) #All good
+        self.log('Cor_view_jk_00', Cor_view_jk_00(zs)) #All good
+        
+        self.log('Cor_batch_ik_10', Cor_batch_ik_10(zs[0:2]))
+        self.log('Cor_batch_ik_00', Cor_batch_ik_00(zs))
+        self.log('Cor_batch_ik_01', Cor_batch_ik_01(zs))
+ 
+        self.log('Cov_batch_ik_10', Cov_batch_ik_10(zs[0:2]))
+        self.log('Cov_batch_ik_00', Cov_batch_ik_00(zs))
+        self.log('Cov_batch_ik_01', Cov_batch_ik_01(zs))
+
+        self.log('Cor_feature_ij_10', Cor_feature_ij_10(zs[0:2]))
+        self.log('Cor_feature_ij_00', Cor_feature_ij_00(zs))
+        self.log('Cor_feature_ij_01', Cor_feature_ij_01(zs))
+
+        
+        self.log('std_batch_emb', std_batch(xs))
+        self.log('std_view_emb', std_view(xs))
+        self.log('std_feature_emb', std_feature(zs))
+ 
+        self.log('Cor_view_jk_10_emb', Cor_view_jk_10(xs[:,0:2,:]))
+        self.log('Cor_view_jk_01_emb', Cor_view_jk_01(xs)) #All good
+        self.log('Cor_view_jk_00_emb', Cor_view_jk_00(zs)) #All good
+        
+        self.log('Cor_batch_ik_10_emb', Cor_batch_ik_10(xs[0:2]))
+        self.log('Cor_batch_ik_00_emb', Cor_batch_ik_00(xs))
+        self.log('Cor_batch_ik_01_emb', Cor_batch_ik_01(xs))
+ 
+        self.log('Cov_batch_ik_10_emb', Cov_batch_ik_10(xs[0:2]))
+        self.log('Cov_batch_ik_00_emb', Cov_batch_ik_00(xs))
+        self.log('Cov_batch_ik_01_emb', Cov_batch_ik_01(xs))
+
+        self.log('Cor_feature_ij_10_emb', Cor_feature_ij_10(xs[0:2]))
+        self.log('Cor_feature_ij_00_emb', Cor_feature_ij_00(xs))
+        self.log('Cor_feature_ij_01_emb', Cor_feature_ij_01(xs))
+         
+        
+        self.log('time_log', time.time() - start)
+        
+        #  Cor_view_jk_01  Cor_view_jk_00    Cor_view_jk_10 Cor_batch_ik_00 Cor_batch_ik_01 Cor_batch_ik_10 Cor_feature_ij_00 Cor_feature_ij_01 Cor_feature_ij_10
+        
+        
+        
         
         return loss
 
@@ -213,23 +333,34 @@ class Toymodel(pl.LightningModule):
         bats=self.bats 
         max_epochs=self.max_epochs 
          
-        self.debug["optim"]=[samples,bats,max_epochs ]
-        if self.optimizer=="LARS":
 
+        
+        if self.learn_rate:
+            self.learn_rate=self.learn_rate
+        elif self.optimizer=="LARS":
+            self.learn_rate=0.2 * bats / 128
+        elif self.optimizer=="Adam":
+            self.learn_rate=6e-2
+        elif self.optimizer=="SGD":
+            self.learn_rate=6e-2 * bats / 128
+        else:
+            raise ValueError("Wrong Learning Rate")
+        self.debug["optim"]=[samples,bats,max_epochs,self.learn_rate]
+        if self.optimizer=="LARS":
             optim  = LARS(
             self.parameters(),
-            lr=0.2 * bats / 128,  # Initialize with a LR of 0
+            lr=self.learn_rate,  # Initialize with a LR of 0
             weight_decay=1.5 * 1e-6,
             weight_decay_filter=exclude_bias_and_norm,
             lars_adaptation_filter=exclude_bias_and_norm
         )
             
         elif self.optimizer=="Adam":
-            optim = torch.optim.Adam(self.parameters(), lr=6e-2 )
+            optim = torch.optim.Adam(self.parameters(), lr=self.learn_rate )
         elif self.optimizer=="SGD":
             optim = torch.optim.SGD(
             self.parameters(),
-            lr=6e-2 * bats / 128,
+            lr=self.learn_rate,
             momentum=0.9,
             weight_decay=5e-4,
         )
@@ -376,58 +507,281 @@ def exclude_bias_and_norm(p):
     return p.ndim == 1
 
 
-from typing import List
-  
-def covariance_loss(x: Tensor) -> Tensor:
-    """Returns VICReg covariance loss.
-
-    Generalized version of the covariance loss with support for tensors with more than
-    two dimensions. Adapted from VICRegL:
-    https://github.com/facebookresearch/VICRegL/blob/803ae4c8cd1649a820f03afb4793763e95317620/main_vicregl.py#L299
-
-    Args:
-        x:
-            Tensor with shape (batch_size, ..., dim).
-    """
-    x = x - x.mean(dim=0)
-    batch_size = x.size(0)
-    dim = x.size(-1)
-    # nondiag_mask has shape (dim, dim) with 1s on all non-diagonal entries.
-    nondiag_mask = ~torch.eye(dim, device=x.device, dtype=torch.bool)
-    # cov has shape (..., dim, dim)
-    cov = torch.einsum("b...c,b...d->...cd", x, x) / (batch_size - 1)
-    loss = cov[..., nondiag_mask].pow(2).sum(-1) / dim
-    return loss.mean()
-                     
-                     
+from typing import List 
 import torch.nn.functional as F
  
-def variance_loss(x: Tensor, eps: float = 0.0001) -> Tensor:
-    """Returns VICReg variance loss.
+def Cov_batch_ik_10(x: torch.Tensor) -> torch.Tensor: # 
+    res = 0
+    
+    for i in range(len(x)):
+        view = x[i]
 
-    Args:
-        x:
-            Tensor with shape (batch_size, ..., dim).
-        eps:
-            Epsilon for numerical stability.
-    """
-    x = x - x.mean(dim=0)
-    std = torch.sqrt(x.var(dim=0) + eps)
-    loss = torch.mean(std)
-    return loss
+        dim = view.size(0)
+        # nondiag_mask has shape (dim, dim) with 1s on all non-diagonal entries.
+        nondiag_mask = ~torch.eye(dim, device=view.device, dtype=torch.bool)
+        # cov has shape (..., dim, dim)
+        cov= torch.cov(view)
+        loss = cov[..., nondiag_mask].pow(2).mean() 
+        res += loss/len(x)
+    return res
+
+
+def Cov_batch_ik_01(x: torch.Tensor) -> torch.Tensor:  
+    x = x.permute(0, 2, 1)  
+    X1=x[0]
+    X2=x[1]
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True) 
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1)  
+    X2_centered_normalized = (X2 - mean_X2)  
+    dim=X1.size(0)
+    nondiag_mask =  torch.eye(dim, device=x.device, dtype=torch.bool)    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].pow(2).mean()
+
+    return loss  
+ 
+def Cov_batch_ik_00(x: torch.Tensor) -> torch.Tensor: 
+    x = x.permute(0, 2, 1) 
+    X1=x[0]
+    X2=x[1]
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True) 
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) 
+    X2_centered_normalized = (X2 - mean_X2) 
+    dim=X1.size(0)
+    nondiag_mask = ~torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].pow(2).mean()
+
+    return loss 
+ 
+def std_batch(x: torch.Tensor) -> torch.Tensor:
+    """Calculate the standard deviation across the batch dimension and then average."""
+    return x.std(dim=1).mean()
+
+def std_view(x: torch.Tensor) -> torch.Tensor:
+    """Calculate the standard deviation across the view dimension and then average."""
+    return x.std(dim=0).mean()
+
+def std_feature(x: torch.Tensor) -> torch.Tensor:
+    """Calculate the standard deviation across the feature dimension and then average."""
+    return x.std(dim=2).mean()
+
+
+
+def Cor_feature_ij_10(x: torch.Tensor) -> torch.Tensor:
+    #x = x.permute(0, 1, 2) 
+    res = 0
+    for i in range(len(x)):
+        view = x[i]
+        dim = view.size(0)
+        # nondiag_mask has shape (dim, dim) with 1s on all non-diagonal entries.
+        nondiag_mask = ~torch.eye(dim, device=view.device, dtype=torch.bool)
+        # cov has shape (..., dim, dim)
+        cov= torch.corrcoef(view)
+        
+        loss = cov[..., nondiag_mask].abs().nanmean()
+        res += loss/len(x)
+    return res
+
+
+
+def Cor_feature_ij_01(x: torch.Tensor) -> torch.Tensor:  
+    X1=x[0]
+    X2=x[1]
+    
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True)
+    
+    # Compute the standard deviation of X1 and X2 along the feature dimension
+    std_X1 = torch.std(X1, dim=1, keepdim=True)
+    std_X2 = torch.std(X2, dim=1, keepdim=True)
+    
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) / std_X1 
+    X2_centered_normalized = (X2 - mean_X2) / std_X2 
+    dim=X1.size(0)
+    nondiag_mask =  torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].abs().nanmean()
+
+    return loss 
+
+def Cor_feature_ij_00(x: torch.Tensor) -> torch.Tensor:
+    #x = x.permute(0, 1, 2) 
+    X1=x[0]
+    X2=x[1]
+    
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True)
+    
+    # Compute the standard deviation of X1 and X2 along the feature dimension
+    std_X1 = torch.std(X1, dim=1, keepdim=True)
+    std_X2 = torch.std(X2, dim=1, keepdim=True)
+    
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) / std_X1 
+    X2_centered_normalized = (X2 - mean_X2) / std_X2 
+    dim=X1.size(0)
+    nondiag_mask = ~torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].abs().nanmean()
+
+    return loss 
+
+
+def Cor_batch_ik_10(x: torch.Tensor) -> torch.Tensor: # 
+    x = x.permute(0, 2, 1) 
+    res = 0
+    for i in range(len(x)):
+        view = x[i]
+
+        dim = view.size(0)
+        # nondiag_mask has shape (dim, dim) with 1s on all non-diagonal entries.
+        nondiag_mask = ~torch.eye(dim, device=view.device, dtype=torch.bool)
+        # cov has shape (..., dim, dim)
+        cov= torch.corrcoef(view)
+        loss = cov[..., nondiag_mask].abs().nanmean() 
+        res += loss/len(x)
+    return res
+
 
  
- 
-def view_variance(zs: List[torch.Tensor]) -> Tensor:
- 
-    average = torch.mean(zs, dim=0)
-    variance = 0
+def Cor_batch_ik_01(x: torch.Tensor) -> torch.Tensor:  
+    x = x.permute(0, 2, 1)  
+    X1=x[0]
+    X2=x[1]
     
-    for i in range(1, len(zs)):
-        average_flat = average.view(-1)
-        element_flat = zs[i].view(-1)
-        variance += torch.mean((average_flat - element_flat) ** 2) 
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True)
     
-    loss = torch.sqrt(variance)   
+    # Compute the standard deviation of X1 and X2 along the feature dimension
+    std_X1 = torch.std(X1, dim=1, keepdim=True)
+    std_X2 = torch.std(X2, dim=1, keepdim=True)
     
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) / std_X1 
+    X2_centered_normalized = (X2 - mean_X2) / std_X2 
+    dim=X1.size(0)
+    nondiag_mask =  torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].abs().nanmean()
+
+    return loss 
+
+def Cor_batch_ik_00(x: torch.Tensor) -> torch.Tensor: 
+    x = x.permute(0, 2, 1) 
+    X1=x[0]
+    X2=x[1]
+    
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True)
+    
+    # Compute the standard deviation of X1 and X2 along the feature dimension
+    std_X1 = torch.std(X1, dim=1, keepdim=True)
+    std_X2 = torch.std(X2, dim=1, keepdim=True)
+    
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) / std_X1 
+    X2_centered_normalized = (X2 - mean_X2) / std_X2 
+    dim=X1.size(0)
+    nondiag_mask = ~torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].abs().nanmean()
+
+    return loss 
+
+
+def Cor_view_jk_10(x: torch.Tensor) -> torch.Tensor:  
+    
+    x = x.permute(1, 2, 0) 
+    res = 0
+    for i in range(len(x)):
+        view = x[i] 
+        dim = view.size(0)
+        # nondiag_mask has shape (dim, dim) with 1s on all non-diagonal entries.
+        nondiag_mask = ~torch.eye(dim, device=view.device, dtype=torch.bool)
+        # cov has shape (..., dim, dim)
+        cov= torch.corrcoef(view)
+        loss = cov[..., nondiag_mask].abs().nanmean() 
+        res += loss/len(x)
+    return res
+
+
+def Cor_view_jk_01(x: torch.Tensor) -> torch.Tensor:  
+    x = x.permute(1, 2, 0) 
+    X1=x[0]
+    X2=x[1]
+    
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True)
+    
+    # Compute the standard deviation of X1 and X2 along the feature dimension
+    std_X1 = torch.std(X1, dim=1, keepdim=True)
+    std_X2 = torch.std(X2, dim=1, keepdim=True)
+    
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) / std_X1 
+    X2_centered_normalized = (X2 - mean_X2) / std_X2 
+    dim=X1.size(0)
+    nondiag_mask =  torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].abs().nanmean()
+
+    return loss 
+
+def Cor_view_jk_00(x: torch.Tensor) -> torch.Tensor:
+    x = x.permute(1, 2, 0) 
+    X1=x[0]
+    X2=x[1]
+    
+    # Compute the mean of X1 and X2 along the feature dimension
+    mean_X1 = torch.mean(X1, dim=1, keepdim=True)
+    mean_X2 = torch.mean(X2, dim=1, keepdim=True)
+    
+    # Compute the standard deviation of X1 and X2 along the feature dimension
+    std_X1 = torch.std(X1, dim=1, keepdim=True)
+    std_X2 = torch.std(X2, dim=1, keepdim=True)
+    
+    # Center and normalize the data by subtracting the mean and dividing by the standard deviation
+    X1_centered_normalized = (X1 - mean_X1) / std_X1 
+    X2_centered_normalized = (X2 - mean_X2) / std_X2 
+    dim=X1.size(0)
+    nondiag_mask = ~torch.eye(dim, device=x.device, dtype=torch.bool)    
+    
+    # Compute the cross-correlation matrix
+    cross_correlation = torch.matmul(X1_centered_normalized, X2_centered_normalized.t())/(X1.size(1)-1)
+    
+    loss = cross_correlation[..., nondiag_mask].abs().nanmean()
+
     return loss 

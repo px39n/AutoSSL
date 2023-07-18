@@ -1,4 +1,4 @@
-GPU Usage(Gbyte): 0.8841996192932129
+GPU Usage(Gbyte): 1.0313172340393066
 backbone: resnet18
 batch_size: 128
 checkpoint_dir: experiment_checkpoints/
@@ -9,7 +9,7 @@ experiment: views VS model
 input_size: 32
 log_dir: experiment_checkpoints/views VS model\Model_BT_VMmean_n_v4
 loss_func: BarlowTwinsLoss
-max_epochs: 25
+max_epochs: 50
 memory_bank_size: 4096
 model: Toymodel
 name: Model_BT_VMmean_n_v4
@@ -33,7 +33,7 @@ prjhead_dim:
   - 2048
   - BN
   - null
-runing time(min): 32.09598641792933
+runing time(min): 74.97879226605097
 samples: 0
 schedule: cos
 seed: 1

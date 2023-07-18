@@ -1,0 +1,7 @@
+batch_size_per_device: 256
+feature_dim: 512
+num_classes: 200
+topk:
+- 1
+- 5
+freeze_model: true
