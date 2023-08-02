@@ -1,3 +1,16 @@
+Info for TUB only,
+
+This is datasets we trained, in slides:
+
+CIFAR100 https://tensorboard.dev/experiment/qrTxoPM5TBirPDprF6xE9Q/#scalars
+CIFAR10 https://tensorboard.dev/experiment/I9NZuY9gSyeyS9qoNksAXg/#scalars
+STL-10 https://tensorboard.dev/experiment/DqIr1ijLQ4ekyTPePVwclw/
+TINYIMAGENET https://tensorboard.dev/experiment/lMFO7WwjSGKIqgL6HR96mA/
+ImageNette: CSV Files
+![image](https://github.com/px39n/AutoSSL/assets/53490111/8e8f6ac3-08bb-4172-a2a9-6bae083af4d0)
+
+
+--------------------------------------
 ## Project Description
 autoSSL is a versatile and accessible library for Self-Supervised Learning (SSL). This Python-based deep learning library provides you with utilities for data loading, model architectures, evaluation scripts, and numerous experiment notebooks. The design and organization of this project encourage flexible, scalable, and reusable workflows for your SSL tasks.
 
