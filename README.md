@@ -7,7 +7,6 @@ CIFAR10 https://tensorboard.dev/experiment/I9NZuY9gSyeyS9qoNksAXg/#scalars
 STL-10 https://tensorboard.dev/experiment/DqIr1ijLQ4ekyTPePVwclw/
 TINYIMAGENET https://tensorboard.dev/experiment/lMFO7WwjSGKIqgL6HR96mA/
 ImageNette: CSV Files
-![image](https://github.com/px39n/AutoSSL/assets/53490111/8e8f6ac3-08bb-4172-a2a9-6bae083af4d0)
 
 
 --------------------------------------
