@@ -1,0 +1,11 @@
+dir_name,ckpt_path,config_path,log_path
+BYOL,benchmark_logs/cifar100\BYOL\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\BYOL\config.yaml,benchmark_logs/cifar100\BYOL\BYOL.csv
+BYOL_Mean,benchmark_logs/cifar100\BYOL_Mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\BYOL_Mean\config.yaml,benchmark_logs/cifar100\BYOL_Mean\BYOL_Mean.csv
+Moco,benchmark_logs/cifar100\Moco\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\Moco\config.yaml,benchmark_logs/cifar100\Moco\Moco.csv
+Moco_mean_Shuffle,benchmark_logs/cifar100\Moco_mean_Shuffle\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\Moco_mean_Shuffle\config.yaml,benchmark_logs/cifar100\Moco_mean_Shuffle\Moco_mean_Shuffle.csv
+SimCLR,benchmark_logs/cifar100\SimCLR\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimCLR\config.yaml,benchmark_logs/cifar100\SimCLR\SimCLR.csv
+SimCLR_mean,benchmark_logs/cifar100\SimCLR_mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimCLR_mean\config.yaml,benchmark_logs/cifar100\SimCLR_mean\SimCLR_mean.csv
+SimSiam,benchmark_logs/cifar100\SimSiam\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimSiam\config.yaml,benchmark_logs/cifar100\SimSiam\SimSiam.csv
+SimSiam_mean,benchmark_logs/cifar100\SimSiam_mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimSiam_mean\config.yaml,benchmark_logs/cifar100\SimSiam_mean\SimSiam_mean.csv
+VICReg,benchmark_logs/cifar100\VICReg\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\VICReg\config.yaml,benchmark_logs/cifar100\VICReg\VICReg.csv
+VICReg_mean,benchmark_logs/cifar100\VICReg_mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\VICReg_mean\config.yaml,benchmark_logs/cifar100\VICReg_mean\VICReg_mean.csv

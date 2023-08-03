@@ -1,0 +1,11 @@
+dir_name,ckpt_path,config_path,log_path,linear_top1_accuracy,linear_top3_accuracy,linear_top1_average_accuracy,linear_knn_top1_accuracy
+BYOL,benchmark_logs/TinyImageNet\BYOL\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\BYOL\config.yaml,benchmark_logs/TinyImageNet\BYOL\BYOL.csv,0.617,0.8845,0.617,0.706125
+BYOL_Mean,benchmark_logs/TinyImageNet\BYOL_Mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\BYOL_Mean\config.yaml,benchmark_logs/TinyImageNet\BYOL_Mean\BYOL_Mean.csv,0.642625,0.902125,0.642625,0.72125
+Moco,benchmark_logs/TinyImageNet\Moco\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\Moco\config.yaml,benchmark_logs/TinyImageNet\Moco\Moco.csv,0.748875,0.943,0.748875,0.714625
+Moco_mean_Shuffle,benchmark_logs/TinyImageNet\Moco_mean_Shuffle\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\Moco_mean_Shuffle\config.yaml,benchmark_logs/TinyImageNet\Moco_mean_Shuffle\Moco_mean_Shuffle.csv,0.735875,0.94075,0.7358750000000001,0.7065
+SimCLR,benchmark_logs/TinyImageNet\SimCLR\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimCLR\config.yaml,benchmark_logs/TinyImageNet\SimCLR\SimCLR.csv,0.642375,0.91,0.6423749999999999,0.703375
+SimCLR_mean,benchmark_logs/TinyImageNet\SimCLR_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimCLR_mean\config.yaml,benchmark_logs/TinyImageNet\SimCLR_mean\SimCLR_mean.csv,0.536125,0.84725,0.5361250000000001,0.7185
+SimSiam,benchmark_logs/TinyImageNet\SimSiam\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimSiam\config.yaml,benchmark_logs/TinyImageNet\SimSiam\SimSiam.csv,0.5795,0.871625,0.5795000000000001,0.692875
+SimSiam_mean,benchmark_logs/TinyImageNet\SimSiam_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimSiam_mean\config.yaml,benchmark_logs/TinyImageNet\SimSiam_mean\SimSiam_mean.csv,0.541625,0.833375,0.541625,0.617
+VICReg,benchmark_logs/TinyImageNet\VICReg\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\VICReg\config.yaml,benchmark_logs/TinyImageNet\VICReg\VICReg.csv,0.560625,0.833875,0.5606249999999999,0.545
+VICReg_mean,benchmark_logs/TinyImageNet\VICReg_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\VICReg_mean\config.yaml,benchmark_logs/TinyImageNet\VICReg_mean\VICReg_mean.csv,0.611625,0.862125,0.611625,0.55925

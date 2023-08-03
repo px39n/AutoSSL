@@ -1,0 +1,12 @@
+CIFAR100 https://tensorboard.dev/experiment/qrTxoPM5TBirPDprF6xE9Q/#scalars
+CIFAR10  https://tensorboard.dev/experiment/I9NZuY9gSyeyS9qoNksAXg/#scalars 
+ImageNett 我还没给你，你随便填个假数据空着等我
+STL10   https://tensorboard.dev/experiment/DqIr1ijLQ4ekyTPePVwclw/
+TINYIMAGENET  https://tensorboard.dev/experiment/lMFO7WwjSGKIqgL6HR96mA/
+
+
+
+P(Y|X)=P(X|Y)
+
+
+P(Y,X)=P(X|Y)*P(Y) 

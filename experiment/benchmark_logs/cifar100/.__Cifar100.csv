@@ -1,0 +1,11 @@
+dir_name,ckpt_path,config_path,log_path,linear_top1_accuracy,linear_top3_accuracy,linear_top1_average_accuracy,linear_knn_top1_accuracy
+BYOL,benchmark_logs/cifar100\BYOL\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\BYOL\config.yaml,benchmark_logs/cifar100\BYOL\BYOL.csv,0.3364,0.5721,0.33640000000000003,0.4856
+BYOL_Mean,benchmark_logs/cifar100\BYOL_Mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\BYOL_Mean\config.yaml,benchmark_logs/cifar100\BYOL_Mean\BYOL_Mean.csv,0.4569,0.6801,0.45690000000000003,0.5628
+Moco,benchmark_logs/cifar100\Moco\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\Moco\config.yaml,benchmark_logs/cifar100\Moco\Moco.csv,0.5114,0.7219,0.5114,0.5159
+Moco_mean_Shuffle,benchmark_logs/cifar100\Moco_mean_Shuffle\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\Moco_mean_Shuffle\config.yaml,benchmark_logs/cifar100\Moco_mean_Shuffle\Moco_mean_Shuffle.csv,0.5341,0.7447,0.5341,0.5379
+SimCLR,benchmark_logs/cifar100\SimCLR\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimCLR\config.yaml,benchmark_logs/cifar100\SimCLR\SimCLR.csv,0.4138,0.6465,0.4138,0.4788
+SimCLR_mean,benchmark_logs/cifar100\SimCLR_mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimCLR_mean\config.yaml,benchmark_logs/cifar100\SimCLR_mean\SimCLR_mean.csv,0.4749,0.6966,0.47490000000000004,0.5742
+SimSiam,benchmark_logs/cifar100\SimSiam\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimSiam\config.yaml,benchmark_logs/cifar100\SimSiam\SimSiam.csv,0.2237,0.415,0.22369999999999998,0.1971
+SimSiam_mean,benchmark_logs/cifar100\SimSiam_mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\SimSiam_mean\config.yaml,benchmark_logs/cifar100\SimSiam_mean\SimSiam_mean.csv,0.0753,0.1894,0.0753,0.1389
+VICReg,benchmark_logs/cifar100\VICReg\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\VICReg\config.yaml,benchmark_logs/cifar100\VICReg\VICReg.csv,0.2102,0.3568,0.21020000000000003,0.246
+VICReg_mean,benchmark_logs/cifar100\VICReg_mean\checkpoints\epoch=99-step=9700.ckpt,benchmark_logs/cifar100\VICReg_mean\config.yaml,benchmark_logs/cifar100\VICReg_mean\VICReg_mean.csv,0.2468,0.4014,0.2468,0.2679

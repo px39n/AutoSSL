@@ -1,0 +1,11 @@
+dir_name,ckpt_path,config_path,log_path
+BYOL,benchmark_logs/TinyImageNet\BYOL\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\BYOL\config.yaml,benchmark_logs/TinyImageNet\BYOL\BYOL.csv
+BYOL_Mean,benchmark_logs/TinyImageNet\BYOL_Mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\BYOL_Mean\config.yaml,benchmark_logs/TinyImageNet\BYOL_Mean\BYOL_Mean.csv
+Moco,benchmark_logs/TinyImageNet\Moco\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\Moco\config.yaml,benchmark_logs/TinyImageNet\Moco\Moco.csv
+Moco_mean_Shuffle,benchmark_logs/TinyImageNet\Moco_mean_Shuffle\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\Moco_mean_Shuffle\config.yaml,benchmark_logs/TinyImageNet\Moco_mean_Shuffle\Moco_mean_Shuffle.csv
+SimCLR,benchmark_logs/TinyImageNet\SimCLR\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimCLR\config.yaml,benchmark_logs/TinyImageNet\SimCLR\SimCLR.csv
+SimCLR_mean,benchmark_logs/TinyImageNet\SimCLR_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimCLR_mean\config.yaml,benchmark_logs/TinyImageNet\SimCLR_mean\SimCLR_mean.csv
+SimSiam,benchmark_logs/TinyImageNet\SimSiam\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimSiam\config.yaml,benchmark_logs/TinyImageNet\SimSiam\SimSiam.csv
+SimSiam_mean,benchmark_logs/TinyImageNet\SimSiam_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\SimSiam_mean\config.yaml,benchmark_logs/TinyImageNet\SimSiam_mean\SimSiam_mean.csv
+VICReg,benchmark_logs/TinyImageNet\VICReg\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\VICReg\config.yaml,benchmark_logs/TinyImageNet\VICReg\VICReg.csv
+VICReg_mean,benchmark_logs/TinyImageNet\VICReg_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/TinyImageNet\VICReg_mean\config.yaml,benchmark_logs/TinyImageNet\VICReg_mean\VICReg_mean.csv

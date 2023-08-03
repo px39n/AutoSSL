@@ -1,0 +1,11 @@
+dir_name,ckpt_path,config_path,log_path,linear_top1_accuracy,linear_top3_accuracy,linear_top1_average_accuracy,linear_knn_top1_accuracy
+BYOL,benchmark_logs/STL10\BYOL\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\BYOL\config.yaml,benchmark_logs/STL10\BYOL\BYOL.csv,0.217,0.3947,0.21700000000000003,0.4363
+BYOL_Mean,benchmark_logs/STL10\BYOL_Mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\BYOL_Mean\config.yaml,benchmark_logs/STL10\BYOL_Mean\BYOL_Mean.csv,0.2625,0.4606,0.2625,0.4363
+Moco,benchmark_logs/STL10\Moco\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\Moco\config.yaml,benchmark_logs/STL10\Moco\Moco.csv,0.4236,0.6439,0.4236,0.4317
+Moco_mean_Shuffle,benchmark_logs/STL10\Moco_mean_Shuffle\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\Moco_mean_Shuffle\config.yaml,benchmark_logs/STL10\Moco_mean_Shuffle\Moco_mean_Shuffle.csv,0.4442,0.6687,0.44420000000000004,0.4474
+SimCLR,benchmark_logs/STL10\SimCLR\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimCLR\config.yaml,benchmark_logs/STL10\SimCLR\SimCLR.csv,0.2934,0.4976,0.2934,0.4197
+SimCLR_mean,benchmark_logs/STL10\SimCLR_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimCLR_mean\config.yaml,benchmark_logs/STL10\SimCLR_mean\SimCLR_mean.csv,0.2658,0.446,0.2658,0.4538
+SimSiam,benchmark_logs/STL10\SimSiam\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimSiam\config.yaml,benchmark_logs/STL10\SimSiam\SimSiam.csv,0.1153,0.2339,0.1153,0.3894
+SimSiam_mean,benchmark_logs/STL10\SimSiam_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimSiam_mean\config.yaml,benchmark_logs/STL10\SimSiam_mean\SimSiam_mean.csv,0.0828,0.1661,0.08280000000000001,0.3246
+VICReg,benchmark_logs/STL10\VICReg\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\VICReg\config.yaml,benchmark_logs/STL10\VICReg\VICReg.csv,0.2357,0.405,0.2357,0.2622
+VICReg_mean,benchmark_logs/STL10\VICReg_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\VICReg_mean\config.yaml,benchmark_logs/STL10\VICReg_mean\VICReg_mean.csv,0.2637,0.4346,0.2637,0.2731

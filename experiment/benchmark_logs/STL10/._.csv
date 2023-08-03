@@ -1,0 +1,11 @@
+dir_name,ckpt_path,config_path,log_path
+BYOL,benchmark_logs/STL10\BYOL\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\BYOL\config.yaml,benchmark_logs/STL10\BYOL\BYOL.csv
+BYOL_Mean,benchmark_logs/STL10\BYOL_Mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\BYOL_Mean\config.yaml,benchmark_logs/STL10\BYOL_Mean\BYOL_Mean.csv
+Moco,benchmark_logs/STL10\Moco\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\Moco\config.yaml,benchmark_logs/STL10\Moco\Moco.csv
+Moco_mean_Shuffle,benchmark_logs/STL10\Moco_mean_Shuffle\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\Moco_mean_Shuffle\config.yaml,benchmark_logs/STL10\Moco_mean_Shuffle\Moco_mean_Shuffle.csv
+SimCLR,benchmark_logs/STL10\SimCLR\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimCLR\config.yaml,benchmark_logs/STL10\SimCLR\SimCLR.csv
+SimCLR_mean,benchmark_logs/STL10\SimCLR_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimCLR_mean\config.yaml,benchmark_logs/STL10\SimCLR_mean\SimCLR_mean.csv
+SimSiam,benchmark_logs/STL10\SimSiam\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimSiam\config.yaml,benchmark_logs/STL10\SimSiam\SimSiam.csv
+SimSiam_mean,benchmark_logs/STL10\SimSiam_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\SimSiam_mean\config.yaml,benchmark_logs/STL10\SimSiam_mean\SimSiam_mean.csv
+VICReg,benchmark_logs/STL10\VICReg\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\VICReg\config.yaml,benchmark_logs/STL10\VICReg\VICReg.csv
+VICReg_mean,benchmark_logs/STL10\VICReg_mean\checkpoints\epoch=99-step=39000.ckpt,benchmark_logs/STL10\VICReg_mean\config.yaml,benchmark_logs/STL10\VICReg_mean\VICReg_mean.csv

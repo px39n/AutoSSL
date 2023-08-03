@@ -1,0 +1,13 @@
+dir_name,ckpt_path,config_path,log_path,linear_top1_accuracy,linear_top3_accuracy,linear_top1_average_accuracy,linear_knn_top1_accuracy
+BYOL,benchmark_logs/800epoch\BYOL\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\BYOL\config.yaml,benchmark_logs/800epoch\BYOL\BYOL.csv,0.1353,0.2608,0.1353,0.4649
+BYOL_Mean,benchmark_logs/800epoch\BYOL_Mean\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\BYOL_Mean\config.yaml,benchmark_logs/800epoch\BYOL_Mean\BYOL_Mean.csv,0.0663,0.1723,0.0663,0.4143
+Moco,benchmark_logs/800epoch\Moco\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\Moco\config.yaml,benchmark_logs/800epoch\Moco\Moco.csv,0.4463,0.6698,0.4463,0.4647
+Moco_mean,benchmark_logs/800epoch\Moco_mean\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\Moco_mean\config.yaml,benchmark_logs/800epoch\Moco_mean\Moco_mean.csv,0.4548,0.6791,0.45480000000000004,0.4275
+Moco_mean_Shuffle,benchmark_logs/800epoch\Moco_mean_Shuffle\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\Moco_mean_Shuffle\config.yaml,benchmark_logs/800epoch\Moco_mean_Shuffle\Moco_mean_Shuffle.csv,0.4694,0.6851,0.46940000000000004,0.48
+Moco_vanilla,benchmark_logs/800epoch\Moco_vanilla\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\Moco_vanilla\config.yaml,benchmark_logs/800epoch\Moco_vanilla\Moco_vanilla.csv,0.4523,0.6739,0.4522999999999999,0.4326
+SimCLR,benchmark_logs/800epoch\SimCLR\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\SimCLR\config.yaml,benchmark_logs/800epoch\SimCLR\SimCLR.csv,0.2688,0.4598,0.2688,0.4464
+SimCLR_mean,benchmark_logs/800epoch\SimCLR_mean\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\SimCLR_mean\config.yaml,benchmark_logs/800epoch\SimCLR_mean\SimCLR_mean.csv,0.0549,0.1634,0.054900000000000004,0.4499
+SimSiam,benchmark_logs/800epoch\SimSiam\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\SimSiam\config.yaml,benchmark_logs/800epoch\SimSiam\SimSiam.csv,0.1038,0.1959,0.1038,0.4308
+SimSiam_mean,benchmark_logs/800epoch\SimSiam_mean\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\SimSiam_mean\config.yaml,benchmark_logs/800epoch\SimSiam_mean\SimSiam_mean.csv,0.0301,0.1005,0.030100000000000005,0.3912
+VICReg,benchmark_logs/800epoch\VICReg\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\VICReg\config.yaml,benchmark_logs/800epoch\VICReg\VICReg.csv,0.2803,0.4607,0.2803,0.2841
+VICReg_mean,benchmark_logs/800epoch\VICReg_mean\checkpoints\epoch=799-step=77600.ckpt,benchmark_logs/800epoch\VICReg_mean\config.yaml,benchmark_logs/800epoch\VICReg_mean\VICReg_mean.csv,0.3009,0.4817,0.3009,0.299
